@@ -1,60 +1,60 @@
 import streamlit as st
-import pickle
+import pandas as pd
 import numpy as np
+import pickle
 
-# Load the trained model
-model_path = 'drive/My Drive/Kaggle/best_stress_prediction_model.pkl'
-with open(model_path, 'rb') as file:
+# Load model
+with open('drive/My Drive/Kaggle/best_stress_prediction_model.pkl', 'rb') as file:
     model = pickle.load(file)
 
-# Title and description
-st.title("Student Stress Level Predictor 🎓")
-st.write("""
-This app predicts your **stress level** based on your daily lifestyle activities such as study time, sleep, social interaction, and physical activities.
-""")
+# Title
+st.title("🎓 Prediksi Tingkat Stres Mahasiswa")
 
-# Input form
-st.header("Enter Your Lifestyle Information")
+st.markdown("Masukkan informasi gaya hidup harian mahasiswa untuk memprediksi tingkat stres.")
 
-study_hours = st.slider("Study Hours Per Day", 0.0, 10.0, 2.0)
-extracurricular_hours = st.slider("Extracurricular Hours Per Day", 0.0, 5.0, 1.0)
-sleep_hours = st.slider("Sleep Hours Per Day", 0.0, 12.0, 6.0)
-social_hours = st.slider("Social Hours Per Day", 0.0, 6.0, 2.0)
-physical_hours = st.slider("Physical Activity Hours Per Day", 0.0, 5.0, 1.0)
-gpa = st.number_input("GPA (0.0 - 4.0)", min_value=0.0, max_value=4.0, value=3.0)
+# Input fields
+study_hours = st.slider("Jam Belajar per Hari", 0.0, 12.0, 2.0)
+sleep_hours = st.slider("Jam Tidur per Hari", 0.0, 12.0, 6.0)
+physical_activity_hours = st.slider("Jam Aktivitas Fisik per Hari", 0.0, 5.0, 1.0)
+social_hours = st.slider("Jam Bersosialisasi per Hari", 0.0, 8.0, 2.0)
+extracurricular_hours = st.slider("Jam Ekstrakurikuler per Hari", 0.0, 5.0, 1.0)
+gpa = st.number_input("IPK (GPA)", min_value=0.0, max_value=4.0, value=3.0)
 
-# Feature Engineering (same as in training)
+# Feature Engineering (sama seperti yang digunakan saat training)
 study_sleep_interaction = study_hours * sleep_hours
-physical_social_interaction = physical_hours * social_hours
+physical_social_interaction = physical_activity_hours * social_hours
 gpa_squared = gpa ** 2
 
-# Binning Study Hours (must match training code!)
-study_bin = ''
-if study_hours <= 2:
-    study_bin = [1, 0, 0, 0]  # Low
-elif study_hours <= 4:
-    study_bin = [0, 1, 0, 0]  # Medium
-elif study_hours <= 6:
-    study_bin = [0, 0, 1, 0]  # High
-else:
-    study_bin = [0, 0, 0, 1]  # Very High
+# Binning Study Hours
+bins = [0, 2, 4, 6, np.inf]
+labels = ['Low', 'Medium', 'High', 'Very High']
+study_bin = pd.cut([study_hours], bins=bins, labels=labels)[0]
 
-# Final feature vector
-features = np.array([[
-    study_hours,
-    extracurricular_hours,
-    sleep_hours,
-    social_hours,
-    physical_hours,
-    gpa,
-    study_sleep_interaction,
-    physical_social_interaction,
-    gpa_squared,
-    *study_bin  # Unpack one-hot encoded bin
-]])
+# One-hot encode Study_Hours_Bin
+study_bin_encoded = {
+    'Study_Hours_Low': 0,
+    'Study_Hours_Medium': 0,
+    'Study_Hours_High': 0,
+    'Study_Hours_Very High': 0
+}
+if study_bin is not np.nan:
+    study_bin_encoded[f'Study_Hours_{study_bin}'] = 1
 
-# Prediction button
-if st.button("Predict Stress Level"):
-    prediction = model.predict(features)[0]
-    st.subheader("Predicted Stress Level:")
-    st.success(prediction)
+# Assemble all features
+input_data = pd.DataFrame([{
+    'Study_Hours_Per_Day': study_hours,
+    'Extracurricular_Hours_Per_Day': extracurricular_hours,
+    'Sleep_Hours_Per_Day': sleep_hours,
+    'Social_Hours_Per_Day': social_hours,
+    'Physical_Activity_Hours_Per_Day': physical_activity_hours,
+    'GPA': gpa,
+    'Study_Sleep_Interaction': study_sleep_interaction,
+    'Physical_Social_Interaction': physical_social_interaction,
+    'GPA_squared': gpa_squared,
+    **study_bin_encoded
+}])
+
+# Prediction
+if st.button("Prediksi Tingkat Stres"):
+    prediction = model.predict(input_data)[0]
+    st.success(f"Tingkat stres yang diprediksi: **{prediction}**")
