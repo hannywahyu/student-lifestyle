@@ -2,8 +2,10 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import pickle
+import os
 
 # Load model
+print(os.listdir())  # Ini akan menampilkan semua file di direktori kerja saat ini
 with open('drive/My Drive/Kaggle/best_stress_prediction_model.pkl', 'rb') as file:
     model = pickle.load(file)
 
