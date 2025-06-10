@@ -1,0 +1,10 @@
+elif page == "Input Nama":
+    st.title("🧾 Input Identitas Pengguna")
+    
+    name = st.text_input("Masukkan Nama Anda:")
+    
+    if name:
+        st.success(f"Halo, {name}! Silakan lanjut ke halaman prediksi untuk melanjutkan.")
+        st.markdown("👉 Buka tab *Prediksi* (belum dibuat) untuk memasukkan data gaya hidup Anda.")
+    else:
+        st.info("Silakan masukkan nama terlebih dahulu.")
