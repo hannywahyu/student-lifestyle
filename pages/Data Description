@@ -1,7 +1,0 @@
-import streamlit as st
-
-st.set_page_config(page_title="Data Description", page_icon="📈")
-st.title("Data Description")
-st.sidebar.header("Data Description")
-
-
