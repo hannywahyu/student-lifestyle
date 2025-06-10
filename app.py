@@ -4,11 +4,11 @@ import numpy as np
 import pickle
 import os
 
-# Load model
-print(os.listdir())  # Ini akan menampilkan semua file di direktori kerja saat ini
-with open('drive/My Drive/Colab Notebooks/best_stress_prediction_model.pkl', 'rb') as file:
-    model = pickle.load(file)
-
+# Load model                                                             
+print(os.listdir())  # Ini akan menampilkan semua file di direktori ker  
+with open('drive/My Drive/Colab Notebooks/best_stress_prediction_model.  
+   model = pickle.load(file)
+    
 # Title
 st.title("🎓 Prediksi Tingkat Stres Mahasiswa")
 
