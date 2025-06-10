@@ -6,7 +6,7 @@ import os
 
 # Load model                                                             
 print(os.listdir())  
-with open('drive/My Drive/Colab Notebooks/best_stress_prediction_model.pkl')  
+#with open('drive/My Drive/Colab Notebooks/best_stress_prediction_model.pkl')  
    model = pickle.load(file)
     
 # Title
