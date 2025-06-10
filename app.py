@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 
 # Load model
-with open('best_stress_prediction_model.pkl', 'rb') as file:
-    model = pickle.load(file)
+#with open('best_stress_prediction_model.pkl', 'rb') as file:
+#model = pickle.load(file)
 
 # Judul aplikasi
 st.title('Prediksi Tingkat Stres Mahasiswa')
