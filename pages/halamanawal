@@ -1,14 +1,2 @@
 import streamlit as st
-from dashboard import show_dashboard
-from input_nama import show_input_nama
-
-# Navigasi
-st.sidebar.title("Navigasi")
-page = st.sidebar.radio("Pilih Halaman:", ["Dashboard", "Input Nama"])
-
-# Routing halaman
-if page == "Dashboard":
-    show_dashboard()
-elif page == "Input Nama":
-    show_input_nama()
 
