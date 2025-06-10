@@ -25,7 +25,5 @@ Aplikasi ini bertujuan membantu memprediksi tingkat stres mahasiswa berdasarkan 
 
 ---
 
-""")
-
 # Tambahan estetika opsional
 st.image("https://img.freepik.com/free-vector/stress-concept-illustration_114360-10140.jpg", use_column_width=True)
