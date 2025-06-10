@@ -40,7 +40,7 @@ warnings.filterwarnings("ignore")
 from google.colab import drive
 drive.mount('/content/drive')
 
-Path = 'drive/My Drive/Kaggle'
+Path = 'drive/My Drive/Colab Notebooks'
 
 df = pd.read_csv(Path + '/student_lifestyle_dataset.csv')
 df.head(50)
