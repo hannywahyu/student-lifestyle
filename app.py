@@ -5,8 +5,8 @@ import pickle
 import os
 
 # Load model                                                             
-print(os.listdir())  # Ini akan menampilkan semua file di direktori ker  
-with open('drive/My Drive/Colab Notebooks/best_stress_prediction_model.  
+print(os.listdir())  
+with open('drive/My Drive/Colab Notebooks/best_stress_prediction_model.pkl')  
    model = pickle.load(file)
     
 # Title
