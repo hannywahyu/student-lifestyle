@@ -5,9 +5,9 @@ import pickle
 import os
 
 # Load model                                                             
-print(os.listdir())  
+#print(os.listdir())  
 #with open('drive/My Drive/Colab Notebooks/best_stress_prediction_model.pkl')  
-   model = pickle.load(file)
+#model = pickle.load(file)
     
 # Title
 st.title("🎓 Prediksi Tingkat Stres Mahasiswa")
