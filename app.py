@@ -20,15 +20,17 @@ model = load_model()
 def load_data(n=300):
     np.random.seed(42)
     data = {
-        "Study Hours": np.random.randint(0, 10, size=n),
-        "Sleep Duration": np.random.randint(4, 10, size=n),
-        "Physical Activity": np.random.randint(0, 5, size=n),
-        "Social Hours": np.random.randint(0, 6, size=n),
-        "Extracurricular Activities": np.random.randint(0, 2, size=n),
+        "Study_Hours_Per_Day": np.random.randint(0, 10, size=n),
+        "Sleep_Hours_Per_Day": np.random.randint(4, 10, size=n),
+        "Physical_Activity_Hours_Per_Day": np.random.randint(0, 5, size=n),
+        "Social_Hours_Per_Day": np.random.randint(0, 6, size=n),
+        "Extracurricular_Hours_Per_Day": np.random.randint(0, 2, size=n),
         "GPA": np.round(np.random.uniform(2.0, 4.0, size=n), 2),
-        "Level": np.random.randint(0, 3, size=n),
     }
-    return pd.DataFrame(data)
+    df = pd.DataFrame(data)
+    df["Academic_Performance_Encoded"] = (df["GPA"] >= 3.0).astype(int)
+    df["Level"] = np.random.randint(0, 3, size=n)
+    return df
 
 # Fungsi untuk plotting Confusion Matrix
 def plot_confusion_matrix(y_true, y_pred, classes):
