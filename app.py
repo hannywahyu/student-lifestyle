@@ -178,43 +178,6 @@ elif page == "Prediction":
             else:
                 st.success(f"Tingkat stres diprediksi: **{prediction}**")
 
-            # Evaluasi model
-            st.markdown("---")
-            st.subheader("Evaluasi Model dengan Data Dummy")
-
-            data = load_data()
-            X = data.drop(columns=["Level"])
-            # Pastikan urutan kolom input sesuai model
-            X = X[[
-            "Study_Hours_Per_Day",
-            "Extracurricular_Hours_Per_Day",
-            "Sleep_Hours_Per_Day",
-            "Social_Hours_Per_Day",
-            "Physical_Activity_Hours_Per_Day",
-            "GPA",
-            "Academic_Performance_Encoded"
-            ]]
-            y = data["Level"]
-            classes = np.unique(y)
-
-            y_pred = model.predict(X)
-            y_score = model.predict_proba(X)
-
-            st.markdown("**Confusion Matrix**")
-            fig_cm = plot_confusion_matrix(y, y_pred, classes)
-            st.pyplot(fig_cm)
-
-            st.markdown("**ROC Curve**")
-            fig_roc = plot_roc_curve(y, y_score, classes)
-            st.pyplot(fig_roc)
-
-            st.markdown("**Precision-Recall Curve**")
-            fig_pr = plot_precision_recall_curve(y, y_score, classes)
-            st.pyplot(fig_pr)
-
-        except Exception as e:
-            st.error(f"Terjadi kesalahan saat prediksi: {str(e)}")
-
 # ===================== Halaman About =====================
 elif page == "About":
     st.title("ℹ️ Tentang Model Ini")
