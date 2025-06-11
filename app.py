@@ -143,8 +143,7 @@ elif page == "Prediction":
         "Physical Activity": physical_activity,
         "Social Hours": social_hours,
         "Extracurricular Activities": extracurricular_binary,
-        "GPA": gpa,
-        "Level": 0  # placeholder jika fitur ini diperlukan
+        "GPA": gpa
     }])
 
     if st.button("Prediksi"):
