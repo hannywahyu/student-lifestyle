@@ -124,7 +124,7 @@ elif page == "Prediction":
     st.title("📈 Prediksi Tingkat Stres")
 
     if "nama" in st.session_state and "umur" in st.session_state:
-        st.info(f"Prediksi untuk: *{st.session_state['nama']}, umur **{st.session_state['umur']} tahun*")
+        st.info(f"Prediksi untuk: {st.session_state['nama']}, umur *{st.session_state['umur']} tahun*")
     else:
         st.warning("Silakan isi identitas terlebih dahulu di halaman Identitas.")
 
