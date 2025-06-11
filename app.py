@@ -80,7 +80,7 @@ def plot_precision_recall_curve(y_true, y_score, classes):
 
 # Sidebar Navigation
 st.sidebar.title("Navigasi")
-page = st.sidebar.radio("Pilih Halaman", ["Identitas", "Data Description", "Prediction", "Evaluation", "About"])
+page = st.sidebar.radio("Pilih Halaman", ["Identitas", "Data Description", "Prediction", "About"])
 
 # ===================== Halaman Identitas =====================
 if page == "Identitas":
@@ -129,4 +129,66 @@ elif page == "Prediction":
     st.write("Masukkan informasi berikut untuk memprediksi tingkat stres:")
 
     study_hours = st.slider("Study Hours per Day", 0, 12, 4)
-    sleep_durat_
+    sleep_duration = st.slider("Sleep Duration per Day (hours)", 0, 12, 7)
+    physical_activity = st.slider("Physical Activity (hours/week)", 0, 20, 3)
+    social_hours = st.slider("Social Hours per Day", 0, 12, 2)
+    extracurricular = st.selectbox("Ikut Kegiatan Ekstrakurikuler?", ["Yes", "No"])
+    gpa = st.number_input("GPA", min_value=0.0, max_value=4.0, value=3.0)
+
+    extracurricular_binary = 1 if extracurricular == "Yes" else 0
+
+    input_data = pd.DataFrame([{
+        "Study Hours": study_hours,
+        "Sleep Duration": sleep_duration,
+        "Physical Activity": physical_activity,
+        "Social Hours": social_hours,
+        "Extracurricular Activities": extracurricular_binary,
+        "GPA": gpa,
+        "Level": 0  # placeholder jika fitur ini diperlukan
+    }])
+
+    if st.button("Prediksi"):
+        prediction = model.predict(input_data)[0]
+        if "nama" in st.session_state:
+            st.success(f"{st.session_state['nama']}, tingkat stres kamu diprediksi: **{prediction}**")
+        else:
+            st.success(f"Tingkat stres diprediksi: **{prediction}**")
+
+        # Tampilkan evaluasi model di bawah prediksi
+        st.markdown("---")
+        st.subheader("Evaluasi Model dengan Data Dummy")
+
+        data = load_data()
+        X = data.drop(columns=["Level"])
+        y = data["Level"]
+        classes = np.unique(y)
+
+        y_pred = model.predict(X)
+        y_score = model.predict_proba(X)
+
+        # Confusion Matrix
+        st.markdown("**Confusion Matrix**")
+        fig_cm = plot_confusion_matrix(y, y_pred, classes)
+        st.pyplot(fig_cm)
+
+        # ROC Curve
+        st.markdown("**ROC Curve**")
+        fig_roc = plot_roc_curve(y, y_score, classes)
+        st.pyplot(fig_roc)
+
+        # Precision-Recall Curve
+        st.markdown("**Precision-Recall Curve**")
+        fig_pr = plot_precision_recall_curve(y, y_score, classes)
+        st.pyplot(fig_pr)
+
+# ===================== Halaman About =====================
+elif page == "About":
+    st.title("ℹ️ Tentang Model Ini")
+    st.write("""
+    Model ini menggunakan pendekatan **Stacking Classifier** untuk memprediksi tingkat stres mahasiswa. 
+    Stacking adalah metode ensemble machine learning yang menggabungkan beberapa model dasar dan meta untuk meningkatkan akurasi.
+
+    - **Model Base**: Kombinasi dari beberapa algoritma
+    - **Model Meta**: Menggabungkan output dari model base
+    - **Kelebihan**: Meningkatkan akurasi dan generalisasi
+    """)
