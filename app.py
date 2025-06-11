@@ -12,7 +12,9 @@ def load_model():
     with open("stacking_classifier_model.pkl", "rb") as f:
         return pickle.load(f)
 
-# Fungsi untuk load data dummy (karena tidak pakai .csv/.pkl)
+model = load_model()  # Panggil model di awal agar bisa digunakan di bagian Prediction
+
+# Fungsi untuk load data dummy
 @st.cache_data
 def load_data(n=300):
     np.random.seed(42)
@@ -31,9 +33,19 @@ def load_data(n=300):
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("Go to", ["Data Description", "Prediction", "About"])
 
-# Page 1: Data Description
+# ===================== Input Nama dan Umur =====================
+with st.expander("👤 Isi Identitas Pengguna", expanded=True):
+    nama = st.text_input("Nama Anda:")
+    umur = st.number_input("Umur Anda:", min_value=0, max_value=120, value=20, step=1)
+
+    if nama.strip() == "":
+        st.warning("Silakan masukkan nama Anda.")
+    else:
+        st.info(f"Hai **{nama}**, umur Anda **{umur} tahun**")
+
+# ===================== Halaman 1: Data Description =====================
 if page == "Data Description":
-    st.title("Data Description")
+    st.title("📊 Data Description")
     st.write("""
     Dataset ini berisi informasi tentang tingkat stres mahasiswa yang diukur berdasarkan:
     - **Study Hours**
@@ -46,15 +58,14 @@ if page == "Data Description":
     Target variabel adalah **Stress Level**.
     """)
 
-     # Panggil data
     data = load_data()
 
     st.subheader("Data Preview")
     st.dataframe(data)
-    
-# Page 2: Prediction
+
+# ===================== Halaman 2: Prediction =====================
 elif page == "Prediction":
-    st.title("Stress Level Prediction")
+    st.title("📈 Stress Level Prediction")
 
     st.write("Masukkan informasi berikut untuk memprediksi tingkat stres mahasiswa:")
 
@@ -78,19 +89,17 @@ elif page == "Prediction":
 
     if st.button("Predict"):
         prediction = model.predict(input_data)[0]
-        st.success(f"Predicted Stress Level: **{prediction}**")
+        st.success(f"{nama}, tingkat stres kamu diprediksi: **{prediction}**")
 
-# Page 3: About
+# ===================== Halaman 3: About =====================
 elif page == "About":
-    st.title("About This Model")
+    st.title("ℹ️ About This Model")
 
     st.write("""
     Model ini menggunakan pendekatan **Stacking Classifier** untuk memprediksi tingkat stres mahasiswa. 
-    Stacking adalah metode ensemble machine learning yang menggabungkan beberapa model dasar (seperti Random Forest, Logistic Regression, dan SVM) dan memanfaatkan model meta untuk meningkatkan performa prediksi.
+    Stacking adalah metode ensemble machine learning yang menggabungkan beberapa model dasar dan meta untuk meningkatkan performa prediksi.
 
-    - **Model Base**: Kombinasi dari beberapa algoritma
+    - **Model Base**: Kombinasi beberapa algoritma
     - **Model Meta**: Menggabungkan output dari model base
     - **Kelebihan**: Meningkatkan akurasi dan generalisasi prediksi
     """)
-
-    st.markdown("Model ini dilatih menggunakan data historis mahasiswa dan faktor-faktor penentu stres seperti durasi belajar, tidur, aktivitas fisik, dan GPA.")
