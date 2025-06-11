@@ -184,6 +184,16 @@ elif page == "Prediction":
 
             data = load_data()
             X = data.drop(columns=["Level"])
+            # Pastikan urutan kolom input sesuai model
+            X = X[[
+            "Study_Hours_Per_Day",
+            "Extracurricular_Hours_Per_Day",
+            "Sleep_Hours_Per_Day",
+            "Social_Hours_Per_Day",
+            "Physical_Activity_Hours_Per_Day",
+            "GPA",
+            "Academic_Performance_Encoded"
+            ]]
             y = data["Level"]
             classes = np.unique(y)
 
