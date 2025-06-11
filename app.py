@@ -118,7 +118,6 @@ elif page == "Data Description":
     st.dataframe(data)
 
 # ===================== Halaman Prediction =====================
-# ===================== Halaman Prediction =====================
 elif page == "Prediction":
     st.title("📈 Prediksi Tingkat Stres")
 
@@ -139,28 +138,27 @@ elif page == "Prediction":
     # Konversi ekstrakurikuler ke binary
     extracurricular_binary = 1 if extracurricular == "Yes" else 0
 
-    # Buat DataFrame input
     input_data = pd.DataFrame([{
-        "Study Hours": study_hours,
-        "Sleep Duration": sleep_duration,
-        "Physical Activity": physical_activity,
-        "Social Hours": social_hours,
-        "Extracurricular Activities": extracurricular_binary,
-        "GPA": gpa,
-    }])
+    "Study_Hours_Per_Day": study_hours,
+    "Sleep_Hours_Per_Day": sleep_duration,
+    "Physical_Activity_Hours_Per_Day": physical_activity,
+    "Social_Hours_Per_Day": social_hours,
+    "Extracurricular_Hours_Per_Day": extracurricular_binary,
+    "GPA": gpa,
+    "Academic_Performance_Encoded": 1 if gpa >= 3.0 else 0  # atau sesuai logika yang dipakai saat training
+}])
 
-    # Susun ulang urutan kolom sesuai yang diharapkan model
     expected_columns = [
-        "Study Hours",
-        "Sleep Duration",
-        "Physical Activity",
-        "Social Hours",
-        "Extracurricular Activities",
-        "GPA"
+    "Study_Hours_Per_Day",
+    "Extracurricular_Hours_Per_Day",
+    "Sleep_Hours_Per_Day",
+    "Social_Hours_Per_Day",
+    "Physical_Activity_Hours_Per_Day",
+    "GPA",
+    "Academic_Performance_Encoded"
     ]
     input_data = input_data[expected_columns]
 
-    # Pastikan tipe data sesuai
     input_data = input_data.astype({
         "Study Hours": int,
         "Sleep Duration": int,
