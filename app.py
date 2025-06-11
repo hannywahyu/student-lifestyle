@@ -93,7 +93,7 @@ if page == "Identitas":
     umur = st.number_input("Masukkan Umur Anda:", min_value=0, max_value=120, value=20)
 
     if nama.strip():
-        st.success(f"Halo *{nama}, umur Anda **{umur} tahun*")
+        st.success(f"Halo {nama}, umur Anda *{umur} tahun*")
         # Simpan di session state agar bisa digunakan di halaman lain
         st.session_state["nama"] = nama
         st.session_state["umur"] = umur
