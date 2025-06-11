@@ -118,6 +118,7 @@ elif page == "Data Description":
     st.dataframe(data)
 
 # ===================== Halaman Prediction =====================
+# ===================== Halaman Prediction =====================
 elif page == "Prediction":
     st.title("📈 Prediksi Tingkat Stres")
 
@@ -135,51 +136,75 @@ elif page == "Prediction":
     extracurricular = st.selectbox("Ikut Kegiatan Ekstrakurikuler?", ["Yes", "No"])
     gpa = st.number_input("GPA", min_value=0.0, max_value=4.0, value=3.0)
 
+    # Konversi ekstrakurikuler ke binary
     extracurricular_binary = 1 if extracurricular == "Yes" else 0
 
+    # Buat DataFrame input
+    input_data = pd.DataFrame([{
+        "Study Hours": study_hours,
+        "Sleep Duration": sleep_duration,
+        "Physical Activity": physical_activity,
+        "Social Hours": social_hours,
+        "Extracurricular Activities": extracurricular_binary,
+        "GPA": gpa,
+    }])
+
+    # Susun ulang urutan kolom sesuai yang diharapkan model
     expected_columns = [
-    "Study Hours",
-    "Sleep Duration",
-    "Physical Activity",
-    "Social Hours",
-    "Extracurricular Activities",
-    "GPA"
-]
-input_data = input_data[expected_columns]
+        "Study Hours",
+        "Sleep Duration",
+        "Physical Activity",
+        "Social Hours",
+        "Extracurricular Activities",
+        "GPA"
+    ]
+    input_data = input_data[expected_columns]
 
+    # Pastikan tipe data sesuai
+    input_data = input_data.astype({
+        "Study Hours": int,
+        "Sleep Duration": int,
+        "Physical Activity": int,
+        "Social Hours": int,
+        "Extracurricular Activities": int,
+        "GPA": float,
+    })
+
+    # Tombol Prediksi
     if st.button("Prediksi"):
-        prediction = model.predict(input_data)[0]
-        if "nama" in st.session_state:
-            st.success(f"{st.session_state['nama']}, tingkat stres kamu diprediksi: **{prediction}**")
-        else:
-            st.success(f"Tingkat stres diprediksi: **{prediction}**")
+        try:
+            prediction = model.predict(input_data)[0]
+            if "nama" in st.session_state:
+                st.success(f"{st.session_state['nama']}, tingkat stres kamu diprediksi: **{prediction}**")
+            else:
+                st.success(f"Tingkat stres diprediksi: **{prediction}**")
 
-        # Tampilkan evaluasi model di bawah prediksi
-        st.markdown("---")
-        st.subheader("Evaluasi Model dengan Data Dummy")
+            # Evaluasi model
+            st.markdown("---")
+            st.subheader("Evaluasi Model dengan Data Dummy")
 
-        data = load_data()
-        X = data.drop(columns=["Level"])
-        y = data["Level"]
-        classes = np.unique(y)
+            data = load_data()
+            X = data.drop(columns=["Level"])
+            y = data["Level"]
+            classes = np.unique(y)
 
-        y_pred = model.predict(X)
-        y_score = model.predict_proba(X)
+            y_pred = model.predict(X)
+            y_score = model.predict_proba(X)
 
-        # Confusion Matrix
-        st.markdown("**Confusion Matrix**")
-        fig_cm = plot_confusion_matrix(y, y_pred, classes)
-        st.pyplot(fig_cm)
+            st.markdown("**Confusion Matrix**")
+            fig_cm = plot_confusion_matrix(y, y_pred, classes)
+            st.pyplot(fig_cm)
 
-        # ROC Curve
-        st.markdown("**ROC Curve**")
-        fig_roc = plot_roc_curve(y, y_score, classes)
-        st.pyplot(fig_roc)
+            st.markdown("**ROC Curve**")
+            fig_roc = plot_roc_curve(y, y_score, classes)
+            st.pyplot(fig_roc)
 
-        # Precision-Recall Curve
-        st.markdown("**Precision-Recall Curve**")
-        fig_pr = plot_precision_recall_curve(y, y_score, classes)
-        st.pyplot(fig_pr)
+            st.markdown("**Precision-Recall Curve**")
+            fig_pr = plot_precision_recall_curve(y, y_score, classes)
+            st.pyplot(fig_pr)
+
+        except Exception as e:
+            st.error(f"Terjadi kesalahan saat prediksi: {str(e)}")
 
 # ===================== Halaman About =====================
 elif page == "About":
