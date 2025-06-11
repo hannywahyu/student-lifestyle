@@ -137,14 +137,22 @@ elif page == "Prediction":
 
     extracurricular_binary = 1 if extracurricular == "Yes" else 0
 
-    input_data = pd.DataFrame([{
-        "Study Hours": study_hours,
-        "Sleep Duration": sleep_duration,
-        "Physical Activity": physical_activity,
-        "Social Hours": social_hours,
-        "Extracurricular Activities": extracurricular_binary,
-        "GPA": gpa
-    }])
+    # Misal input akademik disimulasikan sebagai nilai encoded (bisa input manual juga)
+academic_performance_encoded = st.selectbox(
+    "Academic Performance Level", 
+    options=[0, 1, 2], 
+    help="Pilih level performa akademik (encoded)"
+)
+
+input_data = pd.DataFrame([{
+    "Study_Hours_Per_Day": study_hours,
+    "Extracurricular_Hours_Per_Day": 1 if extracurricular == "Yes" else 0,
+    "Sleep_Hours_Per_Day": sleep_duration,
+    "Social_Hours_Per_Day": social_hours,
+    "Physical_Activity_Hours_Per_Day": physical_activity,
+    "GPA": gpa,
+    "Academic_Performance_Encoded": academic_performance_encoded
+}])
 
     if st.button("Prediksi"):
         prediction = model.predict(input_data)[0]
