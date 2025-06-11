@@ -160,13 +160,14 @@ elif page == "Prediction":
     input_data = input_data[expected_columns]
 
     input_data = input_data.astype({
-        "Study Hours": int,
-        "Sleep Duration": int,
-        "Physical Activity": int,
-        "Social Hours": int,
-        "Extracurricular Activities": int,
-        "GPA": float,
-    })
+    "Study_Hours_Per_Day": int,
+    "Sleep_Hours_Per_Day": int,
+    "Physical_Activity_Hours_Per_Day": int,
+    "Social_Hours_Per_Day": int,
+    "Extracurricular_Hours_Per_Day": int,
+    "GPA": float,
+    "Academic_Performance_Encoded": int
+})
 
     # Tombol Prediksi
     if st.button("Prediksi"):
