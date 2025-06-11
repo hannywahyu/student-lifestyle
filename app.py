@@ -189,6 +189,17 @@ elif page == "Prediction":
             y = data["Level"]
             classes = np.unique(y)
 
+            expected_columns = [
+                "Study_Hours_Per_Day",
+                "Extracurricular_Hours_Per_Day",
+                "Sleep_Hours_Per_Day",
+                "Social_Hours_Per_Day",
+                "Physical_Activity_Hours_Per_Day",
+                "GPA",
+                "Academic_Performance_Encoded"
+            ]
+            X = X[expected_columns]
+            
             y_pred = model.predict(X)
             y_score = model.predict_proba(X)
 
