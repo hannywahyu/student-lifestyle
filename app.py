@@ -87,13 +87,13 @@ elif page == "Prediction":
     extracurricular_binary = 1 if extracurricular == "Yes" else 0
 
     input_data = pd.DataFrame([{
-    "Study_Hours_Per_Day": study_hours,
-    "Sleep_Hours_Per_Day": sleep_duration,
-    "Physical_Activity_Hours_Per_Day": physical_activity,
-    "Social_Hours_Per_Day": social_hours,
-    "Extracurricular_Hours_Per_Day": extracurricular_binary,
+    "Study Hours": study_hours,
+    "Sleep Duration": sleep_duration,
+    "Physical Activity": physical_activity,
+    "Social Hours": social_hours,
+    "Extracurricular Activities": extracurricular_binary,
     "GPA": gpa,
-    "Academic_Performance_Encoded": 0  # <- ini harus diisi sesuai fitur model
+    "Level": 0  # sesuaikan jika memang ada fitur ini
 }])
 
     if st.button("Prediksi"):
