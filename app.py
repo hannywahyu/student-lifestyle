@@ -137,14 +137,15 @@ elif page == "Prediction":
 
     extracurricular_binary = 1 if extracurricular == "Yes" else 0
 
-    input_data = pd.DataFrame([{
-    "Study Hours": study_hours,
-    "Sleep Duration": sleep_duration,
-    "Physical Activity": physical_activity,
-    "Social Hours": social_hours,
-    "Extracurricular Activities": extracurricular_binary,
-    "GPA": gpa,
-}])
+    expected_columns = [
+    "Study Hours",
+    "Sleep Duration",
+    "Physical Activity",
+    "Social Hours",
+    "Extracurricular Activities",
+    "GPA"
+]
+input_data = input_data[expected_columns]
 
     if st.button("Prediksi"):
         prediction = model.predict(input_data)[0]
