@@ -91,7 +91,7 @@ if page == "Identitas":
     umur = st.number_input("Masukkan Umur Anda:", min_value=0, max_value=120, value=20)
 
     if nama.strip():
-        st.success(f"Halo **{nama}**, umur Anda **{umur} tahun**")
+        st.success(f"Halo *{nama}, umur Anda **{umur} tahun*")
         # Simpan di session state agar bisa digunakan di halaman lain
         st.session_state["nama"] = nama
         st.session_state["umur"] = umur
@@ -103,14 +103,14 @@ elif page == "Data Description":
     st.title("📊 Deskripsi Data")
     st.write("""
     Dataset ini berisi informasi tentang tingkat stres mahasiswa yang diukur berdasarkan:
-    - **Study Hours**
-    - **Sleep Duration**
-    - **Physical Activity**
-    - **Social Hours**
-    - **Extracurricular Activities**
-    - **GPA**
+    - *Study Hours*
+    - *Sleep Duration*
+    - *Physical Activity*
+    - *Social Hours*
+    - *Extracurricular Activities*
+    - *GPA*
     
-    Target variabel adalah **Stress Level**.
+    Target variabel adalah *Stress Level*.
     """)
 
     data = load_data()
@@ -122,9 +122,9 @@ elif page == "Prediction":
     st.title("📈 Prediksi Tingkat Stres")
 
     if "nama" in st.session_state and "umur" in st.session_state:
-        st.info(f"Prediksi untuk: **{st.session_state['nama']}**, umur **{st.session_state['umur']} tahun**")
+        st.info(f"Prediksi untuk: *{st.session_state['nama']}, umur **{st.session_state['umur']} tahun*")
     else:
-        st.warning("Silakan isi identitas terlebih dahulu di halaman *Identitas*.")
+        st.warning("Silakan isi identitas terlebih dahulu di halaman Identitas.")
 
     st.write("Masukkan informasi berikut untuk memprediksi tingkat stres:")
 
@@ -174,66 +174,45 @@ elif page == "Prediction":
         try:
             prediction = model.predict(input_data)[0]
             if "nama" in st.session_state:
-                st.success(f"{st.session_state['nama']}, tingkat stres kamu diprediksi: **{prediction}**")
+                st.success(f"{st.session_state['nama']}, tingkat stres kamu diprediksi: *{prediction}*")
             else:
-                st.success(f"Tingkat stres diprediksi: **{prediction}**")
+                st.success(f"Tingkat stres diprediksi: *{prediction}*")
 
-        # -----------------------------
-        # Evaluasi Model (dengan data dummy)
-        # -----------------------------
-        st.markdown("---")
-        st.subheader("Evaluasi Model dengan Data Dummy")
+            # Evaluasi model
+            st.markdown("---")
+            st.subheader("Evaluasi Model dengan Data Dummy")
 
-        data = load_data()
-        
-        # Pastikan kolom yang dibutuhkan ada
-        expected_cols = [
-            "Study_Hours_Per_Day",
-            "Extracurricular_Hours_Per_Day",
-            "Sleep_Hours_Per_Day",
-            "Social_Hours_Per_Day",
-            "Physical_Activity_Hours_Per_Day",
-            "GPA",
-            "Academic_Performance_Encoded"
-        ]
-        
-        missing = [col for col in expected_cols if col not in data.columns]
-        if missing:
-            st.error(f"Kolom berikut tidak ditemukan dalam data: {missing}")
-        else:
-            X = data[expected_cols]
+            data = load_data()
+            X = data.drop(columns=["Level"])
             y = data["Level"]
             classes = np.unique(y)
 
             y_pred = model.predict(X)
             y_score = model.predict_proba(X)
 
-            # Confusion Matrix
-            st.markdown("**Confusion Matrix**")
+            st.markdown("*Confusion Matrix*")
             fig_cm = plot_confusion_matrix(y, y_pred, classes)
             st.pyplot(fig_cm)
 
-            # ROC Curve
-            st.markdown("**ROC Curve**")
+            st.markdown("*ROC Curve*")
             fig_roc = plot_roc_curve(y, y_score, classes)
             st.pyplot(fig_roc)
 
-            # Precision-Recall Curve
-            st.markdown("**Precision-Recall Curve**")
+            st.markdown("*Precision-Recall Curve*")
             fig_pr = plot_precision_recall_curve(y, y_score, classes)
             st.pyplot(fig_pr)
 
-    except Exception as e:
-        st.error(f"Terjadi kesalahan saat prediksi: {e}")
+        except Exception as e:
+            st.error(f"Terjadi kesalahan saat prediksi: {str(e)}")
 
 # ===================== Halaman About =====================
 elif page == "About":
-    st.title("ℹ️ Tentang Model Ini")
+    st.title("ℹ Tentang Model Ini")
     st.write("""
-    Model ini menggunakan pendekatan **Stacking Classifier** untuk memprediksi tingkat stres mahasiswa. 
+    Model ini menggunakan pendekatan *Stacking Classifier* untuk memprediksi tingkat stres mahasiswa. 
     Stacking adalah metode ensemble machine learning yang menggabungkan beberapa model dasar dan meta untuk meningkatkan akurasi.
 
-    - **Model Base**: Kombinasi dari beberapa algoritma
-    - **Model Meta**: Menggabungkan output dari model base
-    - **Kelebihan**: Meningkatkan akurasi dan generalisasi
+    - *Model Base*: Kombinasi dari beberapa algoritma
+    - *Model Meta*: Menggabungkan output dari model base
+    - *Kelebihan*: Meningkatkan akurasi dan generalisasi
     """)
