@@ -11,6 +11,18 @@ from sklearn.metrics import (
 )
 from sklearn.preprocessing import label_binarize
 
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=0.2, random_state=42)
+
+model.fit(X_train, y_train)  # hanya latih di data training
+y_pred = model.predict(X_test)  # evaluasi hanya di test set
+
+from sklearn.model_selection import cross_val_score
+
+scores = cross_val_score(model, X, y, cv=5, scoring='accuracy')
+print(f"Mean CV Accuracy: {scores.mean():.4f}")
+
 # ===========================
 # 1. Load Model & Scaler
 # ===========================
@@ -185,14 +197,21 @@ elif page == "Evaluasi Model":
 
 
     X = data[features]
-    X_scaled = scaler.transform(X)
+    # Gunakan ini hanya untuk evaluasi
+    X_scaled_test = scaler.transform(X_test)
+    y_pred = model.predict(X_scaled_test)
+    y_proba = model.predict_proba(X_scaled_test)
+    acc = accuracy_score(y_test, y_pred)
 
-    y = data["Stress_Level_Encoded"]
-    class_labels = ["Low", "Moderate", "High"]
-    
-    y_pred = model.predict(X_scaled)
-    y_proba = model.predict_proba(X_scaled)
-    acc = accuracy_score(y, y_pred)
+    # Split dulu
+    X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=0.2)
+
+    # Baru SMOTE hanya di train
+    from imblearn.over_sampling import SMOTE
+    smote = SMOTE(random_state=42)
+    X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
+
+
 
     st.subheader("🎯 Akurasi")
     st.success(f"Akurasi: {acc * 100:.2f}%")
