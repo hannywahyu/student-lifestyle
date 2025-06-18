@@ -3,7 +3,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import pickle
+import joblib
+import os
 
 from sklearn.metrics import (
     accuracy_score, confusion_matrix, ConfusionMatrixDisplay,
@@ -16,30 +17,48 @@ from sklearn.preprocessing import label_binarize
 # ===========================
 @st.cache_resource
 def load_model_and_scaler():
-    with open("stacking_classifier_model.pkl", "rb") as f:
-        model = pickle.load(f)
-    with open("scaler.pkl", "rb") as f:
-        scaler = pickle.load(f)
-    return model, scaler
+    model_dir = "models"
+    model_path = os.path.join(model_dir, "stacking_classifier_model.joblib")
+    scaler_path = os.path.join(model_dir, "scaler.joblib")
+
+    try:
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
+            st.warning(f"Directory '{model_dir}' created. Please place your model and scaler files inside.")
+            st.stop()
+
+        model = joblib.load(model_path)
+        scaler = joblib.load(scaler_path)
+        return model, scaler
+    except FileNotFoundError:
+        st.error(f"Error: Model or scaler files not found in '{model_dir}' directory.")
+        st.stop()
+    except Exception as e:
+        st.error(f"Error loading model or scaler: {e}")
+        st.stop()
 
 model, scaler = load_model_and_scaler()
 
-# ===========================
-# 2. Load Dataset
-# ===========================
 @st.cache_data
 def load_data():
-    df = pd.read_csv("student_lifestyle_dataset.csv")
-    stress_mapping = {'Low': 0, 'Moderate': 1, 'High': 2}
-    performance_mapping = {'Poor': 0, 'Fair': 1, 'Good': 2, 'Excellent': 3}
+    try:
+        df = pd.read_csv("student_lifestyle_dataset.csv")
+        stress_mapping = {'Low': 0, 'Moderate': 1, 'High': 2}
+        performance_mapping = {'Poor': 0, 'Fair': 1, 'Good': 2, 'Excellent': 3}
 
-    df['Academic_Performance'] = df['GPA'].apply(
-        lambda x: 'Excellent' if x >= 3.5 else 'Good' if x >= 3.0 else 'Fair' if x >= 2.0 else 'Poor'
-    )
-    df['Academic_Performance_Encoded'] = df['Academic_Performance'].map(performance_mapping)
-    df['Stress_Level_Encoded'] = df['Stress_Level'].map(stress_mapping)
-    
-    return df
+        df['Academic_Performance'] = df['GPA'].apply(
+            lambda x: 'Excellent' if x >= 3.5 else 'Good' if x >= 3.0 else 'Fair' if x >= 2.0 else 'Poor'
+        )
+        df['Academic_Performance_Encoded'] = df['Academic_Performance'].map(performance_mapping)
+        df['Stress_Level_Encoded'] = df['Stress_Level'].map(stress_mapping)
+
+        return df
+    except FileNotFoundError:
+        st.error("Error: Dataset file 'student_lifestyle_dataset.csv' not found. Please ensure it's in the same directory as the Streamlit app.")
+        st.stop()
+    except Exception as e:
+        st.error(f"Error loading data: {e}")
+        st.stop()
 
 data = load_data()
 
@@ -53,7 +72,7 @@ features = [
 # ===========================
 st.sidebar.title("Navigasi")
 page = st.sidebar.selectbox("Pilih halaman", ["Deskripsi Data", "Evaluasi Model", "Prediksi", "Anggota Kelompok"])
-st.sidebar.write(f"Page terpilih: `{page}`")
+st.sidebar.write(f"Halaman terpilih: {page}")
 
 # ===========================
 # 4. Deskripsi Data
@@ -61,61 +80,61 @@ st.sidebar.write(f"Page terpilih: `{page}`")
 if page == "Deskripsi Data":
     st.title("📊 Deskripsi Dataset")
     st.markdown("""
-    ## 🗂️ Dataset Overview: Student Lifestyle and Stress
+    ## 🗂 Dataset Overview: Student Lifestyle and Stress
     
     Dataset ini berisi informasi gaya hidup mahasiswa dan hubungannya dengan tingkat stres serta performa akademik.
     
     ### 🎯 Tujuan
-    Memprediksi **Stress Level** berdasarkan atribut gaya hidup dan akademik.
+    Memprediksi *Tingkat Stres* berdasarkan atribut gaya hidup dan akademik.
     
     ### 🔑 Fitur Utama
-    - **Jumlah data:** 2.000 mahasiswa
-    - **Kolom:** 8 fitur + target
-    - **Fitur gaya hidup:**
-      - 🕒 `Study_Hours_Per_Day`: Jam belajar per hari
-      - 😴 `Sleep_Hours_Per_Day`: Jam tidur per hari
-      - 🏃‍♂️ `Physical_Activity_Hours_Per_Day`: Aktivitas fisik harian
-      - 🗣️ `Social_Hours_Per_Day`: Interaksi sosial
-      - 🎭 `Extracurricular_Hours_Per_Day`: Kegiatan ekstrakurikuler
-    - **Akademik & Target:**
-      - 🎓 `GPA`: Nilai rata-rata akademik
-      - ⚡ `Stress_Level`: Target prediksi — Low, Moderate, High
+    - *Jumlah data:* 2.000 mahasiswa
+    - *Kolom:* 8 fitur + target
+    - *Fitur gaya hidup:*
+      - 🕒 Study_Hours_Per_Day: Jam belajar per hari
+      - 😴 Sleep_Hours_Per_Day: Jam tidur per hari
+      - 🏃‍♂ Physical_Activity_Hours_Per_Day: Aktivitas fisik harian
+      - 🗣 Social_Hours_Per_Day: Interaksi sosial
+      - 🎭 Extracurricular_Hours_Per_Day: Kegiatan ekstrakurikuler
+    - *Akademik & Target:*
+      - 🎓 GPA: Nilai rata-rata akademik
+      - ⚡ Stress_Level: Target prediksi — Rendah, Sedang, Tinggi
     
     ### 📌 Insight Data
     - Stres tinggi → Jam belajar tinggi & tidur rendah
     - Stres rendah → Aktivitas fisik & sosial seimbang
-    - Fitur paling berpengaruh: **Study Hours** & **Sleep Hours**
+    - Fitur paling berpengaruh: *Jam Belajar* & *Jam Tidur*
     """)
 
     st.dataframe(data.head())
 
-    st.subheader("Distribusi Kelas Stress Level")
+    st.subheader("Distribusi Kelas Tingkat Stres")
     st.markdown("""
-    ### 📊 Penjelasan Distribusi Kelas Stress Level
+    ### 📊 Penjelasan Distribusi Kelas Tingkat Stres
     
-    Distribusi ini menunjukkan **jumlah mahasiswa** dalam setiap kategori stres:
+    Distribusi ini menunjukkan *jumlah mahasiswa* dalam setiap kategori stres:
     
-    - 🟢 **Low**: Mahasiswa yang memiliki gaya hidup seimbang—cukup tidur, waktu belajar moderat, dan aktif secara fisik & sosial.
-    - 🟡 **Moderate**: Umumnya memiliki tekanan akademik atau waktu belajar tinggi, namun masih menjaga keseimbangan aktivitas lainnya.
-    - 🔴 **High**: Cenderung disebabkan oleh jam belajar berlebihan, kurang tidur, dan minim aktivitas sosial atau fisik.
+    - 🟢 *Rendah*: Mahasiswa yang memiliki gaya hidup seimbang—cukup tidur, waktu belajar moderat, dan aktif secara fisik & sosial.
+    - 🟡 *Sedang*: Umumnya memiliki tekanan akademik atau waktu belajar tinggi, namun masih menjaga keseimbangan aktivitas lainnya.
+    - 🔴 *Tinggi*: Cenderung disebabkan oleh jam belajar berlebihan, kurang tidur, dan minim aktivitas sosial atau fisik.
     
     Distribusi kelas ini penting karena:
     - Memberi gambaran apakah data seimbang atau tidak.
     - Mempengaruhi performa model prediksi (model bisa bias jika mayoritas data berasal dari satu kelas).
     
-    💡 Jika proporsi kelas tidak seimbang (misalnya sebagian besar Moderate), teknik seperti **SMOTE** digunakan saat training untuk menyeimbangkan data.
+    💡 Jika proporsi kelas tidak seimbang (misalnya sebagian besar Sedang), teknik seperti *SMOTE* digunakan saat pelatihan untuk menyeimbangkan data.
     """)
     st.bar_chart(data["Stress_Level"].value_counts())
     st.markdown("""
-    Distribusi ini menunjukkan jumlah mahasiswa yang tergolong dalam tiga tingkat stress:
-    - **High** (Tinggi): 1029 mahasiswa (**51.5%**)
-    - **Moderate** (Sedang): 674 mahasiswa (**33.7%**)
-    - **Low** (Rendah): 297 mahasiswa (**14.9%**)
+    Distribusi ini menunjukkan jumlah mahasiswa yang tergolong dalam tiga tingkat stres:
+    - *Tinggi: 1029 mahasiswa (51.5%*)
+    - *Sedang: 674 mahasiswa (33.7%*)
+    - *Rendah: 297 mahasiswa (14.9%*)
     
-    Distribusi ini menunjukkan bahwa **lebih dari setengah mahasiswa mengalami stres tinggi**, yang mungkin berkaitan dengan tekanan akademik, kurang tidur, atau kebiasaan gaya hidup yang tidak seimbang.
+    Distribusi ini menunjukkan bahwa *lebih dari setengah mahasiswa mengalami stres tinggi*, yang mungkin berkaitan dengan tekanan akademik, kurang tidur, atau kebiasaan gaya hidup yang tidak seimbang.
     """)
 
-    st.subheader("Diagram Pie Stress Level")
+    st.subheader("Diagram Lingkaran Tingkat Stres")
     fig, ax = plt.subplots()
     data["Stress_Level"].value_counts().plot.pie(
         autopct="%1.1f%%", startangle=90, ax=ax, shadow=True, explode=[0.05]*3
@@ -126,10 +145,10 @@ if page == "Deskripsi Data":
 
     st.subheader("📈 Korelasi Antar Fitur")
     st.markdown("""
-    Korelasi digunakan untuk mengetahui hubungan antara fitur gaya hidup dengan **GPA** atau **Stress Level**:
+    Korelasi digunakan untuk mengetahui hubungan antara fitur gaya hidup dengan *IPK* atau *Tingkat Stres*:
     
-    - Nilai **positif** → Hubungan searah (jika fitur naik, target naik).
-    - Nilai **negatif** → Hubungan berlawanan (jika fitur naik, target turun).
+    - Nilai *positif* → Hubungan searah (jika fitur naik, target naik).
+    - Nilai *negatif* → Hubungan berlawanan (jika fitur naik, target turun).
     
     Nilai korelasi mendekati 1 atau -1 menunjukkan hubungan yang kuat.
     """)
@@ -137,21 +156,21 @@ if page == "Deskripsi Data":
     sns.heatmap(data[features + ["Stress_Level_Encoded"]].corr(), annot=True, cmap="coolwarm", ax=ax)
     st.pyplot(fig_corr)
     
-    st.subheader("📊 Distribusi GPA Mahasiswa")
+    st.subheader("📊 Distribusi IPK Mahasiswa")
     fig_gpa, ax = plt.subplots()
     sns.histplot(data["GPA"], bins=20, kde=True, ax=ax, color="skyblue")
-    ax.set_xlabel("GPA")
+    ax.set_xlabel("IPK")
     ax.set_ylabel("Jumlah Mahasiswa")
     st.pyplot(fig_gpa)
 
     st.subheader("🛌 Jam Tidur vs Tingkat Stres")
-    st.markdown("Boxplot ini menunjukkan hubungan antara **lama tidur** dan **tingkat stres mahasiswa**.")
+    st.markdown("Boxplot ini menunjukkan hubungan antara *lama tidur* dan *tingkat stres mahasiswa*.")
     fig_sleep, ax = plt.subplots()
-    sns.boxplot(x="Stress_Level", y="Sleep_Hours_Per_Day", data=data, palette="Set2", ax=ax, hue="Stress_Level", legend=False)
+    sns.boxplot(x="Stress_Level", y="Sleep_Hours_Per_Day", data=data, palette="Set2", ax=ax)
     st.pyplot(fig_sleep)
 
-    st.subheader("📚 Jam Belajar vs GPA")
-    st.markdown("Scatterplot untuk melihat apakah semakin banyak jam belajar selalu meningkatkan GPA.")
+    st.subheader("📚 Jam Belajar vs IPK")
+    st.markdown("Scatterplot untuk melihat apakah semakin banyak jam belajar selalu meningkatkan IPK.")
     fig_study_gpa, ax = plt.subplots()
     sns.scatterplot(x="Study_Hours_Per_Day", y="GPA", hue="Stress_Level", data=data, palette="Set1", ax=ax)
     st.pyplot(fig_study_gpa)
@@ -164,215 +183,234 @@ elif page == "Evaluasi Model":
     st.markdown("""
     ### 🧪 Evaluasi Model yang Digunakan
     
-    Model yang digunakan adalah **Stacking Classifier**, yaitu gabungan dari beberapa model dasar (XGBoost, Logistic Regression, Decision Tree, Random Forest, dan SVM) yang dipadukan menggunakan meta-model Random Forest.
+    Model yang digunakan adalah *Stacking Classifier*, yaitu gabungan dari beberapa model dasar (XGBoost, Logistic Regression, Decision Tree, Random Forest, dan SVM) yang dipadukan menggunakan meta-model Random Forest.
     Untuk menilai performa model, berikut metrik evaluasi yang digunakan:
     
-    - **🎯 Akurasi**: Proporsi data uji yang berhasil diprediksi dengan benar. Metrik ini memberikan gambaran umum seberapa sering model membuat prediksi yang benar.
+    - *🎯 Akurasi*: Proporsi data uji yang berhasil diprediksi dengan benar. Metrik ini memberikan gambaran umum seberapa sering model membuat prediksi yang benar.
     
-    - **📊 Confusion Matrix**: Menunjukkan perbandingan antara label sebenarnya dan hasil prediksi. Memudahkan untuk melihat kesalahan spesifik antar kelas stres (Low, Moderate, High).
+    - *📊 Confusion Matrix*: Menunjukkan perbandingan antara label sebenarnya dan hasil prediksi. Memudahkan untuk melihat kesalahan spesifik antar kelas stres (Rendah, Sedang, Tinggi).
     
-    - **📉 ROC Curve dan AUC (Area Under Curve)**:
-      - ROC (Receiver Operating Characteristic) menunjukkan trade-off antara True Positive Rate dan False Positive Rate.
+    - *📉 Kurva ROC dan AUC (Area Under Curve)*:
+      - ROC (Receiver Operating Characteristic) menunjukkan trade-off antara Tingkat True Positive dan Tingkat False Positive.
       - AUC mengukur kemampuan model membedakan antara kelas: semakin tinggi (mendekati 1), semakin baik performa model.
     
-    - **🧾 Classification Report**:
-      - **Precision**: Seberapa akurat model saat memprediksi suatu kelas.
-      - **Recall**: Seberapa baik model mendeteksi semua instance dari suatu kelas.
-      - **F1-Score**: Harmonic mean dari precision dan recall, menggambarkan keseimbangan antara keduanya.
+    - *🧾 Laporan Klasifikasi*:
+      - *Presisi*: Seberapa akurat model saat memprediksi suatu kelas.
+      - *Recall*: Seberapa baik model mendeteksi semua instance dari suatu kelas.
+      - *F1-Score*: Harmonic mean dari presisi dan recall, menggambarkan keseimbangan antara keduanya.
     
-    Evaluasi dilakukan menggunakan **data asli** yang telah diseimbangkan menggunakan **SMOTE** dan dinormalisasi dengan **RobustScaler**, agar hasil prediksi lebih adil dan tidak bias terhadap kelas dominan.
+    Evaluasi dilakukan menggunakan *data asli* yang telah diseimbangkan menggunakan *SMOTE* dan dinormalisasi dengan *RobustScaler*, agar hasil prediksi lebih adil dan tidak bias terhadap kelas dominan.
     """)
 
+    # Prepare data for evaluation
+    X = data[features].copy() # Use .copy() to avoid SettingWithCopyWarning
+    y = data['Stress_Level_Encoded']
 
-    X = data[features]
-    X_scaled = scaler.transform(X)
+    # Ensure X has the same column names and order as expected by the scaler
+    # The scaler.feature_names_in_ attribute stores the feature names seen during fit.
+    if hasattr(scaler, 'feature_names_in_') and scaler.feature_names_in_ is not None:
+        # Reorder columns of X to match scaler's expected order
+        try:
+            X = X[scaler.feature_names_in_]
+        except KeyError as e:
+            st.error(f"Error: Column mismatch between data and scaler's fitted features. Missing column: {e}. Please ensure your dataset contains all features used during model training and scaling.")
+            st.stop()
+    else:
+        st.warning("Scaler does not have 'feature_names_in_'. Proceeding with direct scaling. Ensure column order of input data matches training data.")
+        # If the scaler doesn't have feature_names_in_, it means it was loaded
+        # from a .pkl file that was not properly fitted to retain this attribute.
+        # In this case, we trust that 'features' list correctly represents the order.
+        pass # X is already a DataFrame with 'features' columns in the correct order
 
-    y = data["Stress_Level_Encoded"]
-    class_labels = ["Low", "Moderate", "High"]
+    try:
+        X_scaled = scaler.transform(X)
+        y_pred = model.predict(X_scaled)
+        y_pred_proba = model.predict_proba(X_scaled)
+    except Exception as e:
+        st.error(f"Error during model evaluation: {e}. Please check if the scaler and model are compatible with the data.")
+        st.stop()
     
-    y_pred = model.predict(X_scaled)
-    y_proba = model.predict_proba(X_scaled)
-    acc = accuracy_score(y, y_pred)
+    # Mapping for display
+    reverse_stress_mapping = {0: 'Low', 1: 'Moderate', 2: 'High'}
+    y_true_labels = y.map(reverse_stress_mapping)
+    y_pred_labels = pd.Series(y_pred).map(reverse_stress_mapping)
 
-    st.subheader("🎯 Akurasi")
-    st.success(f"Akurasi: {acc * 100:.2f}%")
-    st.markdown("""
-    **Akurasi** adalah persentase prediksi yang benar dari keseluruhan data.
-    
-    > **Rumus**: (Jumlah Prediksi Benar) / (Total Data)
-    
-    - Jika akurasi = 100%, artinya semua prediksi tepat.
-    - ⚠️ Akurasi tinggi **tidak selalu berarti model bagus**, apalagi jika distribusi kelas tidak seimbang (misalnya mayoritas data ada di kelas "High").
-    """)
+    st.subheader("🎯 Akurasi Model")
+    accuracy = accuracy_score(y, y_pred)
+    st.write(f"Akurasi: {accuracy * 100:.2f}%")
 
     st.subheader("📊 Confusion Matrix")
-    fig_cm, ax = plt.subplots()
-    ConfusionMatrixDisplay.from_predictions(y, y_pred, display_labels=class_labels, ax=ax)
+    cm = confusion_matrix(y_true_labels, y_pred_labels, labels=['Low', 'Moderate', 'High'])
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Low', 'Moderate', 'High'])
+    fig_cm, ax_cm = plt.subplots(figsize=(8, 6))
+    disp.plot(cmap=plt.cm.Blues, ax=ax_cm)
+    plt.title("Confusion Matrix")
     st.pyplot(fig_cm)
-    st.markdown("""
-    **Confusion Matrix** adalah tabel yang membandingkan antara label sebenarnya dan hasil prediksi model.
+
+    st.subheader("🧾 Laporan Klasifikasi")
+    report = classification_report(y, y_pred, target_names=['Low', 'Moderate', 'High'], output_dict=True)
+    st.dataframe(pd.DataFrame(report).T)
+
+
+    st.subheader("📉 Kurva ROC dan AUC")
+    n_classes = len(reverse_stress_mapping)
+    y_binarize = label_binarize(y, classes=list(reverse_stress_mapping.keys()))
     
-    - **Baris** = label asli (ground truth)
-    - **Kolom** = label hasil prediksi
-    - Angka di **diagonal utama** adalah jumlah prediksi yang benar.
-    - Angka di luar diagonal = prediksi yang salah.
-
-    📝 **Contoh pada hasil:**
-    - `Low → Low` = 297 ✅
-    - `Moderate → Moderate` = 674 ✅
-    - `High → High` = 1029 ✅
-    - Tidak ada angka di luar diagonal → tidak ada kesalahan prediksi.
-
-    ✅ Ini menunjukkan model **sangat akurat** dalam memetakan data ke kelas stres yang benar.
-    """)
-
-    st.subheader("📉 ROC Curve")
-    y_bin = label_binarize(y, classes=[0, 1, 2])
-    fig_roc, ax = plt.subplots()
-    for i in range(3):
-        fpr, tpr, _ = roc_curve(y_bin[:, i], y_proba[:, i])
-        roc_auc = auc(fpr, tpr)
-        ax.plot(fpr, tpr, label=f"{class_labels[i]} (AUC = {roc_auc:.2f})")
-    ax.plot([0, 1], [0, 1], "k--")
-    ax.set_xlabel("False Positive Rate")
-    ax.set_ylabel("True Positive Rate")
-    ax.legend()
-    st.pyplot(fig_roc)
-    st.markdown("""
-    **ROC Curve** (Receiver Operating Characteristic) menunjukkan hubungan antara:
+    # Compute ROC curve and ROC area for each class
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
     
-    - **True Positive Rate (Recall)** = Seberapa banyak kasus positif yang terdeteksi dengan benar.
-    - **False Positive Rate** = Seberapa banyak kasus negatif yang salah dikira positif.
-
-    Garis ROC yang bagus akan **mendekati pojok kiri atas**.
-
-    **AUC (Area Under Curve)** mengukur luas area di bawah kurva ROC.
-    - Nilai AUC = 1.0 artinya sempurna.
-    - Nilai AUC = 0.5 artinya sama seperti menebak secara acak.
-
-    📝 **Contoh hasil:**
-    - AUC untuk semua kelas (`Low`, `Moderate`, `High`) = **1.00**
-    - Artinya model sangat hebat dalam membedakan ketiga tingkat stres.
-    """)
-
-
-    st.subheader("🧾 Classification Report")
-    st.dataframe(pd.DataFrame(classification_report(y, y_pred, target_names=class_labels, output_dict=True)).T)
-    st.markdown("""
-    **Classification Report** memberikan ringkasan metrik evaluasi untuk setiap kelas:
-
-    - **Precision**: Dari semua prediksi ke kelas ini, berapa yang benar.
-    - **Recall**: Dari semua data yang sebenarnya milik kelas ini, berapa yang berhasil ditemukan.
-    - **F1-Score**: Rata-rata harmonis dari precision dan recall.
-    - **Support**: Jumlah data asli di kelas tersebut.
-
-    📝 **Contoh Interpretasi:**
-    - Jika `High` punya precision dan recall = 1.00 → model memprediksi kelas ini **dengan sempurna**.
-    - `Support` menunjukkan distribusi data asli, contohnya:
-      - `Low`: 297 mahasiswa
-      - `Moderate`: 674 mahasiswa
-      - `High`: 1029 mahasiswa
-    """)
+    # Ensure y_pred_proba has the correct number of columns (n_classes)
+    if y_pred_proba.shape[1] != n_classes:
+        st.warning("y_pred_proba has an unexpected number of columns for ROC curve plotting. Skipping ROC plot.")
+    else:
+        fig_roc, ax_roc = plt.subplots(figsize=(10, 8))
+        colors = ['blue', 'orange', 'green']
+        for i, color in zip(range(n_classes), colors):
+            fpr[i], tpr[i], _ = roc_curve(y_binarize[:, i], y_pred_proba[:, i])
+            roc_auc[i] = auc(fpr[i], tpr[i])
+            ax_roc.plot(fpr[i], tpr[i], color=color, lw=2,
+                     label=f'Kelas {reverse_stress_mapping[i]} (AUC = {roc_auc[i]:.2f})')
+        ax_roc.plot([0, 1], [0, 1], 'k--', lw=2)
+        ax_roc.set_xlim([0.0, 1.0])
+        ax_roc.set_ylim([0.0, 1.05])
+        ax_roc.set_xlabel('Tingkat False Positive')
+        ax_roc.set_ylabel('Tingkat True Positive')
+        ax_roc.set_title('Kurva Receiver Operating Characteristic (ROC)')
+        ax_roc.legend(loc="lower right")
+        st.pyplot(fig_roc)
 
     st.subheader("🧠 Ringkasan Hasil Pelatihan Model")
     st.markdown("""
-    Model dilatih menggunakan pendekatan **Stacking Classifier**, yaitu menggabungkan beberapa algoritma dasar yang kuat dengan meta-learner.  
+    Model dilatih menggunakan pendekatan *Stacking Classifier*, yaitu menggabungkan beberapa algoritma dasar yang kuat dengan meta-learner.  
     Berikut adalah detail proses pelatihan model:
     
     ---
     
     #### 🔢 Dataset:
-    - Jumlah data: **2.000 mahasiswa**
-    - Jumlah fitur: **8 kolom** (gabungan numerik dan kategorik)
-    - Fitur numerik termasuk: **Study, Sleep, GPA, dsb**
-    - Target: `Stress_Level` (Low, Moderate, High)
+    - Jumlah data: *2.000 mahasiswa*
+    - Jumlah fitur: *8 kolom* (gabungan numerik dan kategorik)
+    - Fitur numerik termasuk: *Study, Sleep, GPA, dsb*
+    - Target: Stress_Level (Low, Moderate, High)
     
     ---
     
     #### 📊 Praproses:
     - Konversi label target menjadi numerik:  
-      `Low = 0`, `Moderate = 1`, `High = 2`
-    - Normalisasi fitur numerik dengan **RobustScaler**
-    - Penyeimbangan kelas target menggunakan **SMOTE (Synthetic Minority Over-sampling Technique)**  
-      > Teknik ini efektif mengatasi dominasi label tertentu (misal `High`) agar model tidak bias.
+      Low = 0, Moderate = 1, High = 2
+    - Normalisasi fitur numerik dengan *RobustScaler*
+    - Penyeimbangan kelas target menggunakan *SMOTE (Synthetic Minority Over-sampling Technique)* > Teknik ini efektif mengatasi dominasi label tertentu (misal High) agar model tidak bias.
     
     ---
     
-    #### ⚙️ Arsitektur Model:
-    - **Base Learners**:
+    #### ⚙ Arsitektur Model:
+    - *Base Learners*:
         - Logistic Regression
         - Decision Tree Classifier
         - Random Forest Classifier
         - Support Vector Machine (SVM)
         - XGBoost Classifier
-    - **Meta-Learner**:
+    - *Meta-Learner*:
         - Random Forest Classifier  
           > Digunakan untuk menggabungkan hasil prediksi dari base learners.
     
     ---
     
     #### 📈 Evaluasi Training:
-    - **Akurasi Pelatihan**: 100%
-    - **Confusion Matrix**: Semua prediksi benar
-    - **ROC AUC Score**: 1.00 untuk semua kelas
-    - **Classification Report**:
+    - *Akurasi Pelatihan*: 100%
+    - *Confusion Matrix*: Semua prediksi benar
+    - *ROC AUC Score*: 1.00 untuk semua kelas
+    - *Classification Report*:
         - Precision: 1.00
         - Recall: 1.00
         - F1-score: 1.00
     
-    > 💡 Performa sempurna di data pelatihan menunjukkan bahwa model **fit sangat baik**, namun perlu diuji lebih lanjut menggunakan data uji atau validasi silang untuk mengecek kemungkinan **overfitting**.
+    > 💡 Performa sempurna di data pelatihan menunjukkan bahwa model *fit sangat baik, namun perlu diuji lebih lanjut menggunakan data uji atau validasi silang untuk mengecek kemungkinan **overfitting*.
     """)
 
 
 # ===========================
-# 6. Prediksi
+# 6. Prediction
 # ===========================
 elif page == "Prediksi":
     st.title("🔮 Prediksi Tingkat Stres Mahasiswa")
-
-    # 👤 Input identitas di sini (bukan halaman terpisah)
     nama = st.text_input("Nama Anda:")
     umur = st.number_input("Umur Anda:", min_value=5, max_value=100, value=20)
 
-    # 🧾 Input fitur prediksi
-    study = st.slider("Jam Belajar per Hari", 0, 12, 4)
-    sleep = st.slider("Jam Tidur per Hari", 0, 12, 7)
-    activity = st.slider("Aktivitas Fisik per Hari", 0, 5, 2)
-    social = st.slider("Jam Sosialisasi per Hari", 0, 6, 2)
-    extracurricular = st.selectbox("Ikut Ekstrakurikuler?", ["Ya", "Tidak"])
-    gpa = st.number_input("GPA", 0.0, 4.0, 3.2)
+    study_hours = st.slider("Jam Belajar Per Hari", 0.0, 10.0, 5.0)
+    sleep_hours = st.slider("Jam Tidur Per Hari", 0.0, 10.0, 7.0)
+    physical_activity = st.slider("Jam Aktivitas Fisik Per Hari", 0.0, 13.0, 2.0)
+    social_hours = st.slider("Jam Interaksi Sosial Per Hari", 0.0, 6.0, 2.0)
+    extracurricular_input = st.selectbox("Ikut Ekstrakurikuler?", ["Ya", "Tidak"])
+    extracurricular_hours = 1 if extracurricular_input == "Ya" else 0
+    gpa = st.number_input("IPK:", min_value=0.0, max_value= 4.0, value= 3.0)
 
-    academic_perf = 'Excellent' if gpa >= 3.5 else 'Good' if gpa >= 3.0 else 'Fair' if gpa >= 2.0 else 'Poor'
-    performance_encoded = {'Poor': 0, 'Fair': 1, 'Good': 2, 'Excellent': 3}[academic_perf]
+    # Encode Academic_Performance based on GPA for prediction
+    def encode_academic_performance(gpa_val):
+        if gpa_val >= 3.5:
+            return 3  # Excellent
+        elif gpa_val >= 3.0:
+            return 2  # Good
+        elif gpa_val >= 2.0:
+            return 1  # Fair
+        else:
+            return 0  # Poor
+    
+    academic_performance_encoded = encode_academic_performance(gpa)
 
-    input_df = pd.DataFrame([{
-        "Study_Hours_Per_Day": study,
-        "Sleep_Hours_Per_Day": sleep,
-        "Physical_Activity_Hours_Per_Day": activity,
-        "Social_Hours_Per_Day": social,
-        "Extracurricular_Hours_Per_Day": 1 if extracurricular == "Ya" else 0,
-        "GPA": gpa,
-        "Academic_Performance_Encoded": performance_encoded
-    }])[features]
+    # Create DataFrame for prediction, ensuring column order matches 'features'
+    input_data = pd.DataFrame([[
+        study_hours, sleep_hours, physical_activity,
+        social_hours, extracurricular_hours, gpa, academic_performance_encoded
+    ]], columns=features) # Use 'features' directly as columns
 
-    input_scaled = scaler.transform(input_df)
-
-    if st.button("Prediksi"):
+    if st.button("Prediksi Tingkat Stres"):
         if nama.strip() == "":
             st.error("❌ Mohon isi nama terlebih dahulu sebelum melakukan prediksi.")
         else:
-            pred = model.predict(input_scaled)[0]
-            prob = model.predict_proba(input_scaled)[0]
-            label = {0: "Low", 1: "Moderate", 2: "High"}[pred]
-    
-            st.success(f"Hai {nama} (umur {umur}), tingkat stresmu diprediksi: **{label}**")
-    
-            st.subheader("📊 Probabilitas Prediksi")
-            fig, ax = plt.subplots()
-            ax.bar(["Low", "Moderate", "High"], prob, color=["green", "orange", "red"])
-            ax.set_ylabel("Probabilitas")
-            ax.set_ylim(0, 1)
-            st.pyplot(fig)
+            try:
+                # Ensure input_data columns match scaler's expected order
+                if hasattr(scaler, 'feature_names_in_') and scaler.feature_names_in_ is not None:
+                    # Reorder input_data columns to match scaler's expected order
+                    # This step is crucial if the scaler.pkl was fitted on a DataFrame
+                    # and retains feature_names_in_
+                    input_data_ordered = input_data[scaler.feature_names_in_]
+                else:
+                    # If scaler doesn't have feature_names_in_, trust the 'features' list order
+                    input_data_ordered = input_data.copy()
+                    st.warning("Scaler does not have 'feature_names_in_'. Assuming the input feature order is correct.")
+                
+                # Scale the input data
+                input_scaled = scaler.transform(input_data_ordered)
+                
+                # Make prediction
+                prediction_encoded = model.predict(input_scaled)[0]
+                prediction_proba = model.predict_proba(input_scaled)[0]
+
+                # Decode prediction
+                reverse_stress_mapping = {0: 'Low', 1: 'Moderate', 2: 'High'}
+                predicted_stress_level = reverse_stress_mapping[prediction_encoded]
+
+                st.subheader("Hasil Prediksi:")
+                st.write(f"Hai {nama} (umur {umur}), tingkat stresmu diprediksi: *{predicted_stress_level}*")
+                
+                st.subheader("Probabilitas Prediksi per Kelas:")
+                proba_df = pd.DataFrame({
+                    'Tingkat Stres': ['Low', 'Moderate', 'High'],
+                    'Probabilitas': prediction_proba
+                })
+                st.bar_chart(proba_df.set_index('Tingkat Stres'))
+
+                if predicted_stress_level == 'High':
+                    st.warning("Tingkat stres yang diprediksi adalah TINGGI. Pertimbangkan untuk menyesuaikan gaya hidup.")
+                elif predicted_stress_level == 'Moderate':
+                    st.info("Tingkat stres yang diprediksi adalah SEDANG. Perhatikan keseimbangan gaya hidup Anda.")
+                else:
+                    st.success("Tingkat stres yang diprediksi adalah RENDAH. Pertahankan gaya hidup seimbang Anda!")
+
+            except Exception as e:
+                st.error(f"Terjadi kesalahan saat melakukan prediksi: {e}")
 
 # ===========================
 # 7. Anggota Kelompok
@@ -382,8 +420,9 @@ elif page == "Anggota Kelompok":
     st.markdown("""
     ## Anggota Kelompok:
 
-    1. 👩‍🎓 **Hanny Wahyu Khairuni (2304030050)**  
-    2. 👩‍🎓 **Alya Siti Fathimah (2304030058)**  
-    3. 👨‍🎓 **Alfian Noor Khoeruddin (2304030070)**  
-    4. 👩‍🎓 **Arini Salmah (2304030080)**
+    1. 👩‍🎓 *Hanny Wahyu Khairuni (2304030050)*  
+    2. 👩‍🎓 *Alya Siti Fathimah (2304030058)*  
+    3. 👨‍🎓 *Alfian Noor Khoeruddin (2304030070)*  
+    4. 👩‍🎓 *Arini Salmah (2304030080)*
     """)
+
