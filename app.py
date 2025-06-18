@@ -147,7 +147,7 @@ if page == "Deskripsi Data":
     st.subheader("🛌 Jam Tidur vs Tingkat Stres")
     st.markdown("Boxplot ini menunjukkan hubungan antara **lama tidur** dan **tingkat stres mahasiswa**.")
     fig_sleep, ax = plt.subplots()
-    sns.boxplot(x="Stress_Level", y="Sleep_Hours_Per_Day", data=data, palette="Set2", ax=ax)
+    sns.boxplot(x="Stress_Level", y="Sleep_Hours_Per_Day", data=data, palette="Set2", ax=ax, hue="Stress_Level", legend=False)
     st.pyplot(fig_sleep)
 
     st.subheader("📚 Jam Belajar vs GPA")
@@ -185,7 +185,6 @@ elif page == "Evaluasi Model":
 
 
     X = data[features]
-    X = pd.DataFrame(X, columns=scaler.feature_names_in_)
     X_scaled = scaler.transform(X)
 
     y = data["Stress_Level_Encoded"]
@@ -356,7 +355,6 @@ elif page == "Prediksi":
         "Academic_Performance_Encoded": performance_encoded
     }])[features]
 
-    input_df = pd.DataFrame(input_df, columns=scaler.feature_names_in_)
     input_scaled = scaler.transform(input_df)
 
     if st.button("Prediksi"):
